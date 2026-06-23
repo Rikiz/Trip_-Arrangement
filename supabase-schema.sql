@@ -1,6 +1,6 @@
 -- Run this in Supabase SQL Editor to set up the database tables.
 
-CREATE TABLE trips (
+CREATE TABLE IF NOT EXISTS trips (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   creator_name TEXT NOT NULL,
   departure_city TEXT NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE trips (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE responses (
+CREATE TABLE IF NOT EXISTS responses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   trip_id UUID REFERENCES trips(id) ON DELETE CASCADE NOT NULL,
   respondent_name TEXT NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE responses (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE recommendations (
+CREATE TABLE IF NOT EXISTS recommendations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   trip_id UUID REFERENCES trips(id) ON DELETE CASCADE UNIQUE NOT NULL,
   draft JSONB NOT NULL DEFAULT '{}',
@@ -33,10 +33,15 @@ CREATE TABLE recommendations (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Enable Row Level Security but allow all operations (personal app)
+-- Enable Row Level Security
 ALTER TABLE trips ENABLE ROW LEVEL SECURITY;
 ALTER TABLE responses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recommendations ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies before recreating
+DROP POLICY IF EXISTS "Allow all on trips" ON trips;
+DROP POLICY IF EXISTS "Allow all on responses" ON responses;
+DROP POLICY IF EXISTS "Allow all on recommendations" ON recommendations;
 
 CREATE POLICY "Allow all on trips" ON trips FOR ALL USING (true);
 CREATE POLICY "Allow all on responses" ON responses FOR ALL USING (true);
